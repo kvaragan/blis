@@ -365,7 +365,7 @@ void PASTEMAC(ch,varname) \
 	/* Query the context for the sup microkernel address and cast it to its
 	   function pointer type. */ \
 	PASTECH(ch,gemmsup_ker_ft) \
-               gemmsup_ker = bli_cntx_get_l3_sup_ker_dt( dt, stor_id, cntx ); \
+               gemmsup_ker = bli_cntx_get_l3_gemmsup_ker_dt( dt, stor_id, cntx ); \
 \
 	ctype* restrict a_00       = a; \
 	ctype* restrict b_00       = b; \
@@ -435,7 +435,7 @@ void PASTEMAC(ch,varname) \
 	/* Grow the thrinfo_t tree. */ \
 	bszid_t*   restrict bszids_jc = bszids; \
 	                    thread_jc = thread; \
-	bli_thrinfo_sup_grow( rntm, bszids_jc, thread_jc ); \
+	bli_thrinfo_sup_grow( BLIS_GEMM, rntm, bszids_jc, thread_jc ); \
 \
 	/* Compute the JC loop thread range for the current thread. */ \
 	dim_t jc_start, jc_end; \
@@ -459,7 +459,7 @@ void PASTEMAC(ch,varname) \
 		/* Grow the thrinfo_t tree. */ \
 		bszid_t*   restrict bszids_pc = &bszids_jc[1]; \
 		                    thread_pc = bli_thrinfo_sub_node( thread_jc ); \
-		bli_thrinfo_sup_grow( rntm, bszids_pc, thread_pc ); \
+		bli_thrinfo_sup_grow( BLIS_GEMM, rntm, bszids_pc, thread_pc ); \
 \
 		/* Compute the PC loop thread range for the current thread. */ \
 		const dim_t pc_start = 0, pc_end = k; \
@@ -537,7 +537,7 @@ void PASTEMAC(ch,varname) \
 			/* Grow the thrinfo_t tree. */ \
 			bszid_t*   restrict bszids_ic = &bszids_pa[1]; \
 			                    thread_ic = bli_thrinfo_sub_node( thread_pa ); \
-			bli_thrinfo_sup_grow( rntm, bszids_ic, thread_ic ); \
+			bli_thrinfo_sup_grow( BLIS_GEMM, rntm, bszids_ic, thread_ic ); \
 \
 			/* Compute the IC loop thread range for the current thread. */ \
 			dim_t ic_start, ic_end; \
@@ -585,6 +585,7 @@ void PASTEMAC(ch,varname) \
 				PASTEMAC(ch,packm_sup_b) \
 				( \
 				  packb, \
+				  FALSE, \
 				  BLIS_BUFFER_FOR_A_BLOCK, /* This algorithm packs matrix B to */ \
 				  stor_id,                 /* a "block of A".                  */ \
 				  BLIS_NO_TRANSPOSE, \
@@ -612,7 +613,7 @@ void PASTEMAC(ch,varname) \
 				/* Grow the thrinfo_t tree. */ \
 				bszid_t*   restrict bszids_jr = &bszids_pb[1]; \
 				                    thread_jr = bli_thrinfo_sub_node( thread_pb ); \
-				bli_thrinfo_sup_grow( rntm, bszids_jr, thread_jr ); \
+				bli_thrinfo_sup_grow( BLIS_GEMM, rntm, bszids_jr, thread_jr ); \
 \
 				/* Compute number of primary and leftover components of the JR loop. */ \
 				dim_t jr_iter = ( nc_cur + MR - 1 ) / MR; \
@@ -998,7 +999,7 @@ void PASTEMAC(ch,varname) \
 	/* Query the context for the sup microkernel address and cast it to its
 	   function pointer type. */ \
 	PASTECH(ch,gemmsup_ker_ft) \
-               gemmsup_ker = bli_cntx_get_l3_sup_ker_dt( dt, stor_id, cntx ); \
+               gemmsup_ker = bli_cntx_get_l3_gemmsup_ker_dt( dt, stor_id, cntx ); \
 \
 	ctype* restrict a_00       = a; \
 	ctype* restrict b_00       = b; \
@@ -1057,7 +1058,7 @@ void PASTEMAC(ch,varname) \
 	/* Grow the thrinfo_t tree. */ \
 	bszid_t*   restrict bszids_jc = bszids; \
 	                    thread_jc = thread; \
-	bli_thrinfo_sup_grow( rntm, bszids_jc, thread_jc ); \
+	bli_thrinfo_sup_grow( BLIS_GEMM, rntm, bszids_jc, thread_jc ); \
 \
 	/* Compute the JC loop thread range for the current thread. */ \
 	dim_t jc_start, jc_end; \
@@ -1081,7 +1082,7 @@ void PASTEMAC(ch,varname) \
 		/* Grow the thrinfo_t tree. */ \
 		bszid_t*   restrict bszids_pc = &bszids_jc[1]; \
 		                    thread_pc = bli_thrinfo_sub_node( thread_jc ); \
-		bli_thrinfo_sup_grow( rntm, bszids_pc, thread_pc ); \
+		bli_thrinfo_sup_grow( BLIS_GEMM, rntm, bszids_pc, thread_pc ); \
 \
 		/* Compute the PC loop thread range for the current thread. */ \
 		const dim_t pc_start = 0, pc_end = k; \
@@ -1129,6 +1130,7 @@ void PASTEMAC(ch,varname) \
 			PASTEMAC(ch,packm_sup_b) \
 			( \
 			  packb, \
+			  FALSE, \
 			  BLIS_BUFFER_FOR_B_PANEL, /* This algorithm packs matrix B to */ \
 			  stor_id,                 /* a "panel of B."                  */ \
 			  BLIS_NO_TRANSPOSE, \
@@ -1157,7 +1159,7 @@ void PASTEMAC(ch,varname) \
 			/* Grow the thrinfo_t tree. */ \
 			bszid_t*   restrict bszids_ic = &bszids_pb[1]; \
 			                    thread_ic = bli_thrinfo_sub_node( thread_pb ); \
-			bli_thrinfo_sup_grow( rntm, bszids_ic, thread_ic ); \
+			bli_thrinfo_sup_grow( BLIS_GEMM, rntm, bszids_ic, thread_ic ); \
 \
 			/* Compute the IC loop thread range for the current thread. */ \
 			dim_t ic_start, ic_end; \
@@ -1182,7 +1184,7 @@ void PASTEMAC(ch,varname) \
 				inc_t  rs_a_use, cs_a_use, ps_a_use; \
 \
 				/* Set the bszid_t array and thrinfo_t pointer based on whether
-				   we will be packing B. If we won't be packing A, we alias to
+				   we will be packing A. If we won't be packing A, we alias to
 				   the _ic variables so that code further down can unconditionally
 				   reference the _pa variables. Note that *if* we will be packing
 				   A, the thrinfo_t node will have already been created by a
@@ -1230,7 +1232,7 @@ void PASTEMAC(ch,varname) \
 				/* Grow the thrinfo_t tree. */ \
 				bszid_t*   restrict bszids_jr = &bszids_pa[1]; \
 				                    thread_jr = bli_thrinfo_sub_node( thread_pa ); \
-				bli_thrinfo_sup_grow( rntm, bszids_jr, thread_jr ); \
+				bli_thrinfo_sup_grow( BLIS_GEMM, rntm, bszids_jr, thread_jr ); \
 \
 				/* Compute number of primary and leftover components of the JR loop. */ \
 				dim_t jr_iter = ( nc_cur + NR - 1 ) / NR; \

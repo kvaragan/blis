@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -197,7 +197,7 @@ void bli_cntx_init_zen( cntx_t* cntx )
 #endif
 
 	// Update the context with optimized small/unpacked gemm kernels.
-	bli_cntx_set_l3_sup_kers
+	bli_cntx_set_l3_gemmsup_kers
 	(
 	  16,
 	  //BLIS_RCR, BLIS_DOUBLE, bli_dgemmsup_r_haswell_ref,

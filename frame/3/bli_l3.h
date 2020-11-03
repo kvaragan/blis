@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -74,10 +74,14 @@
 // Prototype reference implementation of small/unpacked matrix handler.
 #include "bli_l3_sup_ref.h"
 #include "bli_l3_sup_int.h"
-#include "bli_l3_sup_vars.h"
+#include "bli_l3_sup_rntm.h"
 #include "bli_l3_sup_packm_a.h"
+#include "bli_l3_sup_packtrim_a.h"
 #include "bli_l3_sup_packm_b.h"
+#include "bli_l3_sup_packm_d.h"
 #include "bli_l3_sup_packm_var.h"
+#include "bli_l3_sup_gemm_var.h"
+#include "bli_l3_sup_trsm_var.h"
 
 // Prototype microkernel wrapper APIs.
 #include "bli_l3_ukr_oapi.h"

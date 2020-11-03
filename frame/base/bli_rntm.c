@@ -4,7 +4,7 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2014, The University of Texas at Austin
+   Copyright (C) 2014 - 2020, The University of Texas at Austin
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -265,6 +265,69 @@ void bli_rntm_set_ways_from_rntm
 	bli_rntm_set_ways_only( jc, pc, ic, jr, ir, rntm );
 }
 
+// -----------------------------------------------------------------------------
+
+#if 0
+void bli_rntm_set_ways_for_op_sup
+     (
+       opid_t  l3_op,
+       side_t  side,
+       dim_t   m,
+       dim_t   n,
+       dim_t   k,
+       rntm_t* rntm
+     )
+{
+#if 0
+printf( "bli_rntm_set_ways_for_op()\n" );
+bli_rntm_print( rntm );
+#endif
+
+	// Now modify the number of ways, if necessary, based on the operation.
+	if ( l3_op == BLIS_TRSM )
+	{
+		// Set the number of ways for each loop, if needed, depending on what
+		// kind of information is already stored in the rntm_t object.
+		if ( bli_is_left( side ) )
+		{
+			bli_rntm_set_ways_from_rntm_sup( m, n, k, rntm );
+		}
+		else // if ( bli_is_right( side ) )
+		{
+			// Right side cases are always transformed to left side cases, which
+			// results in a swapping of m and n.
+			bli_rntm_set_ways_from_rntm_sup( n, m, k, rntm );
+		}
+
+		dim_t jc = bli_rntm_jc_ways( rntm );
+		dim_t pc = bli_rntm_pc_ways( rntm );
+		dim_t ic = bli_rntm_ic_ways( rntm );
+		dim_t jr = bli_rntm_jr_ways( rntm );
+		dim_t ir = bli_rntm_ir_ways( rntm );
+
+		// Notice that, when updating the ways, we don't need to update the
+		// num_threads field since we only reshuffle where the parallelism is
+		// extracted, not the total amount of parallelism.
+
+		// NOTE: For now, we limit the parallelism in trsm to the jc and jr
+		// loops.
+
+		// NOTE: We don't need to take the side into account when limiting the
+		// parallelism since right side cases will be transformed into their
+		// equivalent left side cases, and we always use the same bp algorithm.
+		bli_rntm_set_ways_only
+		(
+		  jc * ic * pc,
+		  1,
+		  1,
+		  jr * ir,
+		  1,
+		  rntm
+		);
+	}
+}
+#endif
+
 void bli_rntm_set_ways_from_rntm_sup
      (
        dim_t   m,
@@ -385,6 +448,8 @@ void bli_rntm_set_ways_from_rntm_sup
 	bli_rntm_set_num_threads_only( nt, rntm );
 	bli_rntm_set_ways_only( jc, pc, ic, jr, ir, rntm );
 }
+
+// -----------------------------------------------------------------------------
 
 void bli_rntm_print
      (

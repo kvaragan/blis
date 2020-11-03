@@ -6,7 +6,7 @@
 
    Copyright (C) 2014, The University of Texas at Austin
    Copyright (C) 2016, Hewlett Packard Enterprise Development LP
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -371,6 +371,18 @@ void bli_rntm_set_ways_from_rntm
        dim_t   k,
        rntm_t* rntm
      );
+
+#if 0
+void bli_rntm_set_ways_for_op_sup
+     (
+       opid_t  l3_op,
+       side_t  side,
+       dim_t   m,
+       dim_t   n,
+       dim_t   k,
+       rntm_t* rntm
+     );
+#endif
 
 void bli_rntm_set_ways_from_rntm_sup
      (

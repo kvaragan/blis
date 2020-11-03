@@ -166,7 +166,7 @@ void PASTEMAC(ch,opname) \
 	} \
 }
 
-INSERT_GENTFUNC_BASIC0( packm_sup_init_mem_a )
+INSERT_GENTFUNC_BASIC0( packtrim_sup_init_mem_a )
 
 
 #undef  GENTFUNC
@@ -204,7 +204,7 @@ void PASTEMAC(ch,opname) \
 	} \
 }
 
-INSERT_GENTFUNC_BASIC0( packm_sup_finalize_mem_a )
+INSERT_GENTFUNC_BASIC0( packtrim_sup_finalize_mem_a )
 
 
 #undef  GENTFUNC
@@ -213,8 +213,6 @@ INSERT_GENTFUNC_BASIC0( packm_sup_finalize_mem_a )
 void PASTEMAC(ch,opname) \
      ( \
        bool             will_pack, \
-       stor3_t          stor_id, \
-       pack_t* restrict schema, \
        dim_t            m, \
        dim_t            k, \
        dim_t            mr, \
@@ -243,10 +241,6 @@ void PASTEMAC(ch,opname) \
 \
 			*pd_p = mr; \
 			*ps_p = mr * rs_x; \
-\
-			/* Set the schema to "not packed" to indicate that packing will be
-			   skipped. */ \
-			*schema = BLIS_NOT_PACKED; \
 		} \
 \
 		/* Since we won't be packing, simply update the buffer address provided
@@ -255,41 +249,21 @@ void PASTEMAC(ch,opname) \
 	} \
 	else /* if ( will_pack == TRUE ) */ \
 	{ \
-		/* NOTE: This "rounding up" of the last upanel is actually optional
-		   for the rrc/crc cases, but absolutely necessary for the other cases
+		/* NOTE: This "rounding up" of the last upanel is absolutely necessary
 		   since we NEED that last micropanel to have the same ldim (cs_p) as
-		   the other micropanels. Why? So that millikernels can use the same
-		   upanel ldim for all iterations of the ir loop. */ \
+		   the other micropanels. Why? So that millikernel (if employed) can
+		   use the same upanel ldim for all iterations of the ir loop. */ \
 		*m_max = ( m / mr + ( m % mr ? 1 : 0 ) ) * mr; \
 		*k_max = k; \
 \
 		/* Determine the dimensions and strides for the packed matrix A. */ \
-		if ( stor_id == BLIS_RRC || \
-			 stor_id == BLIS_CRC ) \
 		{ \
-			/* stor3_t id values _RRC and _CRC: pack A to plain row storage. */ \
-			*rs_p = k; \
-			*cs_p = 1; \
-\
-			*pd_p = mr; \
-			*ps_p = mr * k; \
-\
-			/* Set the schema to "row packed" to indicate packing to plain
-			   row storage. */ \
-			*schema = BLIS_PACKED_ROWS; \
-		} \
-		else \
-		{ \
-			/* All other stor3_t ids: pack A to column-stored row-panels. */ \
+			/* Pack A to column-stored row-panels. */ \
 			*rs_p = 1; \
 			*cs_p = mr; \
 \
 			*pd_p = mr; \
 			*ps_p = mr * k; \
-\
-			/* Set the schema to "packed row panels" to indicate packing to
-			   conventional column-stored row panels. */ \
-			*schema = BLIS_PACKED_ROW_PANELS; \
 		} \
 \
 		/* Set the buffer address provided by the caller to point to the
@@ -299,7 +273,7 @@ void PASTEMAC(ch,opname) \
 	} \
 }
 
-INSERT_GENTFUNC_BASIC0( packm_sup_init_a )
+INSERT_GENTFUNC_BASIC0( packtrim_sup_init_a )
 
 
 //
@@ -313,7 +287,8 @@ void PASTEMAC(ch,opname) \
      ( \
        bool             will_pack, \
        packbuf_t        pack_buf_type, \
-       stor3_t          stor_id, \
+       doff_t           diagoffa, \
+       uplo_t           uploa, \
        trans_t          transa, \
        dim_t            m_alloc, \
        dim_t            k_alloc, \
@@ -330,14 +305,13 @@ void PASTEMAC(ch,opname) \
        thrinfo_t* restrict thread  \
      ) \
 { \
-	pack_t schema; \
 	dim_t  m_max; \
 	dim_t  k_max; \
 	dim_t  pd_p; \
 \
 	/* Prepare the packing destination buffer. If packing is not requested,
 	   this function will reduce to a no-op. */ \
-	PASTEMAC(ch,packm_sup_init_mem_a) \
+	PASTEMAC(ch,packtrim_sup_init_mem_a) \
 	( \
 	  will_pack, \
 	  pack_buf_type, \
@@ -351,11 +325,9 @@ void PASTEMAC(ch,opname) \
 	/* Determine the packing buffer and related parameters for matrix A. If A
 	   will not be packed, then a_use will be set to point to a and the _a_use
 	   strides will be set accordingly. */ \
-	PASTEMAC(ch,packm_sup_init_a) \
+	PASTEMAC(ch,packtrim_sup_init_a) \
 	( \
 	  will_pack, \
-	  stor_id, \
-	  &schema, \
 	  m, k, mr, \
 	  &m_max, &k_max, \
 	  a, rs_a,  cs_a, \
@@ -377,37 +349,19 @@ void PASTEMAC(ch,opname) \
 	} \
 	else /* if ( will_pack == TRUE ) */ \
 	{ \
-		if ( schema == BLIS_PACKED_ROWS ) \
-		{ \
-			/*
-			printf( "blis_ packm_sup_a: packing A to rows.\n" ); \
-			*/ \
-\
-			/* For plain packing by rows, use var2. */ \
-			PASTEMAC(ch,packm_sup_var2) \
-			( \
-			  transa, \
-			  schema, \
-			  m, \
-			  k, \
-			  kappa, \
-			  a,  rs_a,  cs_a, \
-			  *p, *rs_p, *cs_p, \
-			  cntx, \
-			  thread  \
-			); \
-		} \
-		else /* if ( schema == BLIS_PACKED_ROW_PANELS ) */ \
+		/* if ( schema == BLIS_PACKED_ROW_PANELS ) */ \
 		{ \
 			/*
 			printf( "blis_ packm_sup_a: packing A to row panels.\n" ); \
 			*/ \
 \
 			/* For packing to column-stored row panels, use var1. */ \
-			PASTEMAC(ch,packm_sup_var1) \
+			PASTEMAC(ch,packtrim_sup_var1) \
 			( \
+			  diagoffa, \
+			  uploa, \
 			  transa, \
-			  schema, \
+			  BLIS_PACKED_ROW_PANELS, \
 			  m, \
 			  k, \
 			  m_max, \
@@ -426,5 +380,5 @@ void PASTEMAC(ch,opname) \
 	} \
 }
 
-INSERT_GENTFUNC_BASIC0( packm_sup_a )
+INSERT_GENTFUNC_BASIC0( packtrim_sup_a )
 

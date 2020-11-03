@@ -235,7 +235,7 @@ void bli_cntx_init_haswell( cntx_t* cntx )
 	);
 
 	// Update the context with optimized small/unpacked gemm kernels.
-	bli_cntx_set_l3_sup_kers
+	bli_cntx_set_l3_gemmsup_kers
 	(
 	  8,
 	  //BLIS_RCR, BLIS_DOUBLE, bli_dgemmsup_r_haswell_ref,

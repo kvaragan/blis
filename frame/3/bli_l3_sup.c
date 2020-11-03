@@ -4,7 +4,7 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -126,6 +126,82 @@ printf( "dims: %d %d %d (threshs: %d %d %d)\n",
 	  b,
 	  beta,
 	  c,
+	  cntx,
+	  rntm
+	);
+}
+
+
+err_t bli_trsmsup
+     (
+       side_t  side,
+       obj_t*  alpha,
+       obj_t*  a,
+       obj_t*  b,
+       cntx_t* cntx,
+       rntm_t* rntm
+     )
+{
+	// Return early if small matrix handling is disabled at configure-time.
+	#ifdef BLIS_DISABLE_SUP_HANDLING
+	return BLIS_FAILURE;
+	#endif
+
+	// Return early if this is a mixed-datatype computation.
+	if ( bli_obj_dt( b ) != bli_obj_dt( a ) ||
+	     bli_obj_comp_prec( b ) != bli_obj_prec( b ) ) return BLIS_FAILURE;
+
+	// Obtain a valid (native) context from the gks if necessary.
+	// NOTE: This must be done before calling the _check() function, since
+	// that function assumes the context pointer is valid.
+	if ( cntx == NULL ) cntx = bli_gks_query_cntx();
+
+	// Return early if the dimensions are outside of the space of sup-handled
+	// problems.
+	{
+		const num_t dt = bli_obj_dt( b );
+		const dim_t m  = bli_obj_length( b );
+		const dim_t n  = bli_obj_width( b );
+
+		if ( !bli_cntx_l3_sup_thresh_is_met( dt, m, n, 1, cntx ) )
+			return BLIS_FAILURE;
+	}
+
+	// Initialize a local runtime with global settings if necessary. Note
+	// that in the case that a runtime is passed in, we make a local copy.
+	rntm_t rntm_l;
+	if ( rntm == NULL ) { bli_rntm_init_from_global( &rntm_l ); rntm = &rntm_l; }
+	else                { rntm_l = *rntm;                       rntm = &rntm_l; }
+
+#if 0
+const num_t dt = bli_obj_dt( b );
+const dim_t m  = bli_obj_length( b );
+const dim_t n  = bli_obj_width( b );
+const dim_t tm = bli_cntx_get_l3_sup_thresh_dt( dt, BLIS_MT, cntx );
+const dim_t tn = bli_cntx_get_l3_sup_thresh_dt( dt, BLIS_NT, cntx );
+const dim_t tk = bli_cntx_get_l3_sup_thresh_dt( dt, BLIS_KT, cntx );
+
+printf( "dims: %d %d (threshs: %d %d)\n", (int)m, (int)n, (int)tm, (int)tn, );
+#endif
+
+	// We've now ruled out the following possibility:
+	// - the ukernel prefers the operation as-is, and the sup thresholds are
+	//   unsatisfied.
+	// This implies that the sup thresholds (at least one of them) are met.
+	// and the small/unpacked handler should be called.
+	// NOTE: The sup handler is free to enforce a stricter threshold regime
+	// if it so chooses, in which case it can/should return BLIS_FAILURE.
+
+	// Query the small/unpacked handler from the context and invoke it.
+	trsmsup_oft trsmsup_fp = bli_cntx_get_l3_sup_handler( BLIS_TRSM, cntx );
+
+	return
+	trsmsup_fp
+	(
+	  side,
+	  alpha,
+	  a,
+	  b,
 	  cntx,
 	  rntm
 	);

@@ -6,7 +6,7 @@
 
    Copyright (C) 2014, The University of Texas at Austin
    Copyright (C) 2016, Hewlett Packard Enterprise Development LP
-   Copyright (C) 2018-2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -1429,8 +1429,11 @@ typedef struct cntx_s
 	blksz_t   l3_sup_thresh[ BLIS_NUM_THRESH ];
 	void*     l3_sup_handlers[ BLIS_NUM_LEVEL3_OPS ];
 	blksz_t   l3_sup_blkszs[ BLIS_NUM_BLKSZS ];
-	func_t    l3_sup_kers[ BLIS_NUM_3OP_RC_COMBOS ];
-	mbool_t   l3_sup_kers_prefs[ BLIS_NUM_3OP_RC_COMBOS ];
+
+	func_t    l3_gemmsup_kers[ BLIS_NUM_3OP_RC_COMBOS ];
+	mbool_t   l3_gemmsup_kers_prefs[ BLIS_NUM_3OP_RC_COMBOS ];
+
+	func_t    l3_gemmtrsmsup_kers[ BLIS_NUM_LEVEL3_UKRS ];
 
 	func_t    l1f_kers[ BLIS_NUM_LEVEL1F_KERS ];
 	func_t    l1v_kers[ BLIS_NUM_LEVEL1V_KERS ];

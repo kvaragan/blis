@@ -6,7 +6,7 @@
 
    Copyright (C) 2014, The University of Texas at Austin
    Copyright (C) 2016, Hewlett Packard Enterprise Development LP
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -53,8 +53,11 @@ typedef struct cntx_s
 	blksz_t*  l3_sup_thresh;
 	void**    l3_sup_handlers;
 	blksz_t*  l3_sup_blkszs;
-	func_t*   l3_sup_kers;
-	mbool_t*  l3_sup_kers_prefs;
+
+	func_t*   l3_gemmsup_kers;
+	mbool_t*  l3_gemmsup_kers_prefs;
+
+	func_t*   l3_gemmtrsmsup_kers;
 
 	func_t*   l1f_kers;
 	func_t*   l1v_kers;
@@ -108,13 +111,17 @@ BLIS_INLINE blksz_t* bli_cntx_l3_sup_blkszs_buf( cntx_t* cntx )
 {
 	return cntx->l3_sup_blkszs;
 }
-BLIS_INLINE func_t* bli_cntx_l3_sup_kers_buf( cntx_t* cntx )
+BLIS_INLINE func_t* bli_cntx_l3_gemmsup_kers_buf( cntx_t* cntx )
 {
-	return cntx->l3_sup_kers;
+	return cntx->l3_gemmsup_kers;
 }
-BLIS_INLINE mbool_t* bli_cntx_l3_sup_kers_prefs_buf( cntx_t* cntx )
+BLIS_INLINE mbool_t* bli_cntx_l3_gemmsup_kers_prefs_buf( cntx_t* cntx )
 {
-	return cntx->l3_sup_kers_prefs;
+	return cntx->l3_gemmsup_kers_prefs;
+}
+BLIS_INLINE func_t* bli_cntx_l3_gemmtrsmsup_kers_buf( cntx_t* cntx )
+{
+	return cntx->l3_gemmtrsmsup_kers;
 }
 BLIS_INLINE func_t* bli_cntx_l1f_kers_buf( cntx_t* cntx )
 {
@@ -353,36 +360,53 @@ BLIS_INLINE dim_t bli_cntx_get_l3_sup_blksz_max_dt( num_t dt, bszid_t bs_id, cnt
 
 // -----------------------------------------------------------------------------
 
-BLIS_INLINE func_t* bli_cntx_get_l3_sup_kers( stor3_t stor_id, cntx_t* cntx )
+BLIS_INLINE func_t* bli_cntx_get_l3_gemmsup_kers( stor3_t stor_id, cntx_t* cntx )
 {
-	func_t* funcs = bli_cntx_l3_sup_kers_buf( cntx );
+	func_t* funcs = bli_cntx_l3_gemmsup_kers_buf( cntx );
 	func_t* func  = &funcs[ stor_id ];
 
 	return func;
 }
 
-BLIS_INLINE void* bli_cntx_get_l3_sup_ker_dt( num_t dt, stor3_t stor_id, cntx_t* cntx )
+BLIS_INLINE void* bli_cntx_get_l3_gemmsup_ker_dt( num_t dt, stor3_t stor_id, cntx_t* cntx )
 {
-	func_t* func = bli_cntx_get_l3_sup_kers( stor_id, cntx );
+	func_t* func = bli_cntx_get_l3_gemmsup_kers( stor_id, cntx );
 
 	return bli_func_get_dt( dt, func );
 }
 
 // -----------------------------------------------------------------------------
 
-BLIS_INLINE mbool_t* bli_cntx_get_l3_sup_ker_prefs( stor3_t stor_id, cntx_t* cntx )
+BLIS_INLINE mbool_t* bli_cntx_get_l3_gemmsup_ker_prefs( stor3_t stor_id, cntx_t* cntx )
 {
-	mbool_t* mbools = bli_cntx_l3_sup_kers_prefs_buf( cntx );
+	mbool_t* mbools = bli_cntx_l3_gemmsup_kers_prefs_buf( cntx );
 	mbool_t* mbool  = &mbools[ stor_id ];
 
 	return mbool;
 }
 
-BLIS_INLINE bool bli_cntx_get_l3_sup_ker_prefs_dt( num_t dt, stor3_t stor_id, cntx_t* cntx )
+BLIS_INLINE bool bli_cntx_get_l3_gemmsup_ker_prefs_dt( num_t dt, stor3_t stor_id, cntx_t* cntx )
 {
-	mbool_t* mbool = bli_cntx_get_l3_sup_ker_prefs( stor_id, cntx );
+	mbool_t* mbool = bli_cntx_get_l3_gemmsup_ker_prefs( stor_id, cntx );
 
 	return ( bool )bli_mbool_get_dt( dt, mbool );
+}
+
+// -----------------------------------------------------------------------------
+
+BLIS_INLINE func_t* bli_cntx_get_l3_gemmtrsmsup_kers( l3ukr_t ukr_id, cntx_t* cntx )
+{
+	func_t* funcs = bli_cntx_l3_gemmtrsmsup_kers_buf( cntx );
+	func_t* func  = &funcs[ ukr_id ];
+
+	return func;
+}
+
+BLIS_INLINE void* bli_cntx_get_l3_gemmtrsmsup_ker_dt( num_t dt, l3ukr_t ukr_id, cntx_t* cntx )
+{
+	func_t* func = bli_cntx_get_l3_gemmtrsmsup_kers( ukr_id, cntx );
+
+	return bli_func_get_dt( dt, func );
 }
 
 // -----------------------------------------------------------------------------
@@ -587,18 +611,18 @@ BLIS_INLINE bool bli_cntx_l3_vir_ukr_dislikes_storage_of( obj_t* obj, l3ukr_t uk
 
 // -----------------------------------------------------------------------------
 
-BLIS_INLINE bool bli_cntx_l3_sup_ker_prefers_rows_dt( num_t dt, stor3_t stor_id, cntx_t* cntx )
+BLIS_INLINE bool bli_cntx_l3_gemmsup_ker_prefers_rows_dt( num_t dt, stor3_t stor_id, cntx_t* cntx )
 {
-	const bool prefs = bli_cntx_get_l3_sup_ker_prefs_dt( dt, stor_id, cntx );
+	const bool prefs = bli_cntx_get_l3_gemmsup_ker_prefs_dt( dt, stor_id, cntx );
 
 	// A ukernel preference of TRUE means the ukernel prefers row storage.
 	return ( bool )
 	       ( prefs == TRUE );
 }
 
-BLIS_INLINE bool bli_cntx_l3_sup_ker_prefers_cols_dt( num_t dt, stor3_t stor_id, cntx_t* cntx )
+BLIS_INLINE bool bli_cntx_l3_gemmsup_ker_prefers_cols_dt( num_t dt, stor3_t stor_id, cntx_t* cntx )
 {
-	const bool prefs = bli_cntx_get_l3_sup_ker_prefs_dt( dt, stor_id, cntx );
+	const bool prefs = bli_cntx_get_l3_gemmsup_ker_prefs_dt( dt, stor_id, cntx );
 
 	// A ukernel preference of FALSE means the ukernel prefers column storage.
 	return ( bool )
@@ -608,13 +632,13 @@ BLIS_INLINE bool bli_cntx_l3_sup_ker_prefers_cols_dt( num_t dt, stor3_t stor_id,
 #if 0
 // NOTE: These static functions aren't needed yet.
 
-BLIS_INLINE bool bli_cntx_l3_sup_ker_prefers_storage_of( obj_t* obj, stor3_t stor_id, cntx_t* cntx )
+BLIS_INLINE bool bli_cntx_l3_gemmsup_ker_prefers_storage_of( obj_t* obj, stor3_t stor_id, cntx_t* cntx )
 {
 	const num_t dt    = bli_obj_dt( obj );
 	const bool  ukr_prefers_rows
-	                  = bli_cntx_l3_sup_ker_prefers_rows_dt( dt, stor_id, cntx );
+	                  = bli_cntx_l3_gemmsup_ker_prefers_rows_dt( dt, stor_id, cntx );
 	const bool  ukr_prefers_cols
-	                  = bli_cntx_l3_sup_ker_prefers_cols_dt( dt, stor_id, cntx );
+	                  = bli_cntx_l3_gemmsup_ker_prefers_cols_dt( dt, stor_id, cntx );
 	bool        r_val = FALSE;
 
 	if      ( bli_obj_is_row_stored( obj ) && ukr_prefers_rows ) r_val = TRUE;
@@ -623,10 +647,10 @@ BLIS_INLINE bool bli_cntx_l3_sup_ker_prefers_storage_of( obj_t* obj, stor3_t sto
 	return r_val;
 }
 
-BLIS_INLINE bool bli_cntx_l3_sup_ker_dislikes_storage_of( obj_t* obj, stor3_t stor_id, cntx_t* cntx )
+BLIS_INLINE bool bli_cntx_l3_gemmsup_ker_dislikes_storage_of( obj_t* obj, stor3_t stor_id, cntx_t* cntx )
 {
 	return ( bool )
-	       !bli_cntx_l3_sup_ker_prefers_storage_of( obj, stor_id, cntx );
+	       !bli_cntx_l3_gemmsup_ker_prefers_storage_of( obj, stor_id, cntx );
 }
 #endif
 
@@ -743,7 +767,9 @@ BLIS_EXPORT_BLIS void bli_cntx_set_l3_vir_ukrs( dim_t n_ukrs, ... );
 BLIS_EXPORT_BLIS void bli_cntx_set_l3_sup_thresh( dim_t n_thresh, ... );
 BLIS_EXPORT_BLIS void bli_cntx_set_l3_sup_handlers( dim_t n_ops, ... );
 BLIS_EXPORT_BLIS void bli_cntx_set_l3_sup_blkszs( dim_t n_bs, ... );
-BLIS_EXPORT_BLIS void bli_cntx_set_l3_sup_kers( dim_t n_ukrs, ... );
+
+BLIS_EXPORT_BLIS void bli_cntx_set_l3_gemmsup_kers( dim_t n_ukrs, ... );
+BLIS_EXPORT_BLIS void bli_cntx_set_l3_gemmtrsmsup_kers( dim_t n_ukrs, ... );
 
 BLIS_EXPORT_BLIS void bli_cntx_set_l1f_kers( dim_t n_kers, ... );
 BLIS_EXPORT_BLIS void bli_cntx_set_l1v_kers( dim_t n_kers, ... );

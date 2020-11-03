@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -96,6 +96,7 @@ INSERT_GENTPROT_BASIC0( packm_sup_init_b )
 void PASTEMAC(ch,opname) \
      ( \
        bool             will_pack, \
+       bool             will_fuse, \
        packbuf_t        pack_buf_type, \
        stor3_t          stor_id, \
        trans_t          transc, \

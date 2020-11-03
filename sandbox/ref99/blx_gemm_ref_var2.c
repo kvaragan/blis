@@ -4,7 +4,7 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -238,7 +238,7 @@ void PASTEMAC(ch,varname) \
 	/* Query the context for the sup microkernel address and cast it to its
 	   function pointer type. */ \
 	PASTECH(ch,gemmsup_ker_ft) \
-               gemmsup_ker = bli_cntx_get_l3_sup_ker_dt( dt, stor_id, cntx ); \
+               gemmsup_ker = bli_cntx_get_l3_gemmsup_ker_dt( dt, stor_id, cntx ); \
 \
 	ctype* restrict a_00       = a; \
 	ctype* restrict b_00       = b; \

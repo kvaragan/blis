@@ -4,7 +4,7 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -53,4 +53,10 @@ INSERT_GENTPROT_BASIC0( gemmsup_rd_ukr_name )
 INSERT_GENTPROT_BASIC0( gemmsup_cd_ukr_name )
 
 INSERT_GENTPROT_BASIC0( gemmsup_gx_ukr_name )
+
+#undef  GENTPROT
+#define GENTPROT GEMMTRSMSUP_KER_PROT
+
+INSERT_GENTPROT_BASIC0( gemmtrsmsup_l_ukr_name )
+INSERT_GENTPROT_BASIC0( gemmtrsmsup_u_ukr_name )
 

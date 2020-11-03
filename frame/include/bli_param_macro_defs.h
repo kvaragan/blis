@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -333,6 +333,14 @@ BLIS_INLINE uplo_t bli_uplo_toggled( uplo_t uplo )
 	         :     uplo
 	       );
 }
+
+#if 0
+BLIS_INLINE uplo_t bli_uplo_toggled_unsafe( uplo_t uplo )
+{
+	return ( uplo_t )
+	       ( ( uplo ^ BLIS_LOWER_BIT ) ^ BLIS_UPPER_BIT );
+}
+#endif
 
 BLIS_INLINE void bli_toggle_uplo( uplo_t* uplo )
 {

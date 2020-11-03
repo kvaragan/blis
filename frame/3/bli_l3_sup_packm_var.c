@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -58,6 +58,8 @@ void PASTEMAC(ch,varname) \
        thrinfo_t* restrict thread  \
      ) \
 { \
+	const num_t     dt         = PASTEMAC(ch,type); \
+\
 	ctype* restrict kappa_cast = kappa; \
 	ctype* restrict c_cast     = c; \
 	ctype* restrict p_cast     = p; \
@@ -123,6 +125,12 @@ void PASTEMAC(ch,varname) \
 		ldp            = cs_p; \
 	} \
 \
+	/* Query the context for the packm kernel address and cast it to its
+	   function pointer type. */ \
+	const l1mkr_t ker_id = pd_p; \
+	PASTECH(ch,packm_cxk_ker_ft) \
+	               packm_ker = bli_cntx_get_packm_ker_dt( dt, ker_id, cntx ); \
+\
 	/* Compute the total number of iterations we'll need. */ \
 	n_iter = iter_dim / panel_dim_max + ( iter_dim % panel_dim_max ? 1 : 0 ); \
 \
@@ -171,12 +179,13 @@ void PASTEMAC(ch,varname) \
 			   or round-robin partitioning was requested at configure-time. */ \
 			if ( bli_packm_my_iter( it, it_start, it_end, tid, nt ) ) \
 			{ \
-				PASTEMAC(ch,packm_cxk) \
+				/*PASTEMAC(ch,packm_cxk)*/ \
+				packm_ker \
 				( \
 				  conjc, \
 				  schema, \
 				  panel_dim_i, \
-				  panel_dim_max, \
+				  /*panel_dim_max,*/ \
 				  panel_len_i, \
 				  panel_len_max_i, \
 				  kappa_cast, \
@@ -460,4 +469,239 @@ PASTEMAC(ch,fprintm)( stdout, "packm_sup_var1: a packed", panel_dim_max, panel_l
 }
 
 INSERT_GENTFUNCR_BASIC( packm, packm_sup_var2 )
+
+
+
+#undef  GENTFUNCR
+#define GENTFUNCR( ctype, ctype_r, ch, chr, opname, varname ) \
+\
+void PASTEMAC(ch,varname) \
+     ( \
+       doff_t           diagoffa, \
+       uplo_t           uploa, \
+       trans_t          transa, \
+       pack_t           schema, \
+       dim_t            m, \
+       dim_t            n, \
+       dim_t            m_max, \
+       dim_t            n_max, \
+       ctype*  restrict kappa, \
+       ctype*  restrict c, inc_t rs_c, inc_t cs_c, \
+       ctype*  restrict p, inc_t rs_p, inc_t cs_p, \
+                           dim_t pd_p, inc_t ps_p, \
+       cntx_t* restrict cntx, \
+       thrinfo_t* restrict thread  \
+     ) \
+{ \
+	const num_t     dt         = PASTEMAC(ch,type); \
+\
+	ctype* restrict kappa_cast = kappa; \
+	ctype* restrict c_cast     = c; \
+	ctype* restrict p_cast     = p; \
+\
+	dim_t           iter_dim; \
+	dim_t           n_iter; \
+	dim_t           it, ic, ip; \
+	dim_t           ic0, ip0; \
+	doff_t          ic_inc, ip_inc; \
+	doff_t          diagoffa_inc; \
+	dim_t           panel_len_full; \
+	dim_t           panel_len_i; \
+	dim_t           panel_len_max; \
+	dim_t           panel_len_max_i; \
+	dim_t           panel_dim_i; \
+	dim_t           panel_dim_max; \
+	inc_t           vs_c; \
+	inc_t           ldc; \
+	inc_t           ldp, p_inc; \
+	conj_t          conjc; \
+\
+	const bool      revifup = TRUE; \
+\
+\
+	/* Extract the conjugation bit from the transposition argument. */ \
+	conjc = bli_extract_conj( transa ); \
+\
+	/* Create flags to incidate row or column storage. Note that the
+	   schema bit that encodes row or column is describing the form of
+	   micro-panel, not the storage in the micro-panel. Hence the
+	   mismatch in "row" and "column" semantics. */ \
+	bool row_stored = bli_is_col_packed( schema ); \
+	/*bool col_stored = bli_is_row_packed( schema );*/ \
+\
+	/* If the row storage flag indicates row storage, then we are packing
+	   to column panels; otherwise, if the strides indicate column storage,
+	   we are packing to row panels. */ \
+	if ( row_stored ) \
+	{ \
+		/* Prepare to pack to row-stored column panels. */ \
+		iter_dim       = n; \
+		panel_len_full = m; \
+		panel_len_max  = m_max; \
+		panel_dim_max  = pd_p; \
+		vs_c           = cs_c; \
+		diagoffa_inc   = -( doff_t )panel_dim_max; \
+		ldc            = rs_c; \
+		ldp            = rs_p; \
+	} \
+	else /* if ( col_stored ) */ \
+	{ \
+		/* NOTE: Since this function is designed to pack to left-hand
+		   matrix A, only this branch will ever execute. */ \
+\
+		/* Prepare to pack to column-stored row panels. */ \
+		iter_dim       = m; \
+		panel_len_full = n; \
+		panel_len_max  = n_max; \
+		panel_dim_max  = pd_p; \
+		vs_c           = rs_c; \
+		diagoffa_inc   = ( doff_t )panel_dim_max; \
+		ldc            = cs_c; \
+		ldp            = cs_p; \
+	} \
+\
+	/* Query the context for the packm kernel address and cast it to its
+	   function pointer type. */ \
+	const l1mkr_t ker_id = pd_p; \
+	PASTECH(ch,packm_cxk_ker_ft) \
+	               packm_ker = bli_cntx_get_packm_ker_dt( dt, ker_id, cntx ); \
+\
+	/* Compute the total number of iterations we'll need. */ \
+	n_iter = iter_dim / panel_dim_max + ( iter_dim % panel_dim_max ? 1 : 0 ); \
+\
+	/* Set the initial values and increments for indices related to C and P
+	   based on whether reverse iteration was requested. */ \
+	if ( ( revifup && bli_is_upper( uploa ) ) ) \
+	{ \
+		ic0    = (n_iter - 1) * panel_dim_max; \
+		ic_inc = -panel_dim_max; \
+		ip0    = n_iter - 1; \
+		ip_inc = -1; \
+	} \
+	else \
+	{ \
+		ic0    = 0; \
+		ic_inc = panel_dim_max; \
+		ip0    = 0; \
+		ip_inc = 1; \
+	} \
+\
+	ctype* restrict p_begin = p_cast; \
+\
+	/* Query the number of threads and thread ids from the current thread's
+	   packm thrinfo_t node. */ \
+	const dim_t nt  = bli_thread_n_way( thread ); \
+	const dim_t tid = bli_thread_work_id( thread ); \
+\
+	/* Suppress warnings in case tid isn't used (ie: as in slab partitioning). */ \
+	( void )nt; \
+	( void )tid; \
+\
+	dim_t it_start, it_end, it_inc; \
+\
+	/* Determine the thread range and increment using the current thread's
+	   packm thrinfo_t node. NOTE: The definition of bli_thread_range_jrir()
+	   will depend on whether slab or round-robin partitioning was requested
+	   at configure-time. */ \
+	bli_thread_range_jrir( thread, n_iter, 1, FALSE, &it_start, &it_end, &it_inc ); \
+\
+	/* Iterate over every logical micropanel in the source matrix. */ \
+	for ( ic  = ic0,    ip  = ip0,    it  = 0; it < n_iter; \
+	      ic += ic_inc, ip += ip_inc, it += 1 ) \
+	{ \
+		panel_dim_i = bli_min( panel_dim_max, iter_dim - ic ); \
+\
+		doff_t          diagoffa_i = diagoffa + (ip  )*diagoffa_inc; \
+		ctype* restrict c_begin    = c_cast   + (ic  )*vs_c; \
+\
+		if ( bli_intersects_diag_n( diagoffa_i, panel_dim_i, n ) ) \
+		{ \
+			dim_t panel_off_i; \
+\
+			if ( bli_is_lower( uploa ) ) \
+			{ \
+				panel_off_i     = 0; \
+				panel_len_i     = diagoffa_i + panel_dim_i; \
+				panel_len_max_i = bli_min( diagoffa_i + panel_dim_max, \
+				                           panel_len_max ); \
+			} \
+			else /* if ( bli_is_upper( uploa ) )*/ \
+			{ \
+				panel_off_i     = diagoffa_i; \
+				panel_len_i     = panel_len_full - panel_off_i; \
+				panel_len_max_i = panel_len_max  - panel_off_i; \
+			} \
+\
+			ctype* restrict c_use = c_begin + panel_off_i*ldc; \
+			ctype* restrict p_use = p_begin; \
+\
+			if ( bli_packm_my_iter( it, it_start, it_end, tid, nt ) ) \
+			{ \
+				/*PASTEMAC(ch,packm_cxk)*/ \
+				packm_ker \
+				( \
+				  conjc, \
+				  schema, \
+				  panel_dim_i, \
+				  /*panel_dim_max,*/ \
+				  panel_len_i, \
+				  panel_len_max_i, \
+				  kappa_cast, \
+				  c_use, vs_c, ldc, \
+				  p_use,       ldp, \
+				  cntx  \
+				); \
+			} \
+\
+			if ( 0 ) p_inc = ps_p; \
+			else     p_inc = ldp * panel_len_max_i; \
+		} \
+		else \
+		{ \
+			ctype* restrict c_use = c_begin; \
+			ctype* restrict p_use = p_begin; \
+\
+			panel_len_i     = panel_len_full; \
+			panel_len_max_i = panel_len_max; \
+\
+			/* The definition of bli_packm_my_iter() will depend on whether slab
+			   or round-robin partitioning was requested at configure-time. */ \
+			if ( bli_packm_my_iter( it, it_start, it_end, tid, nt ) ) \
+			{ \
+				/*PASTEMAC(ch,packm_cxk)*/ \
+				packm_ker \
+				( \
+				  conjc, \
+				  schema, \
+				  panel_dim_i, \
+				  /*panel_dim_max,*/ \
+				  panel_len_i, \
+				  panel_len_max_i, \
+				  kappa_cast, \
+				  c_use, vs_c, ldc, \
+				  p_use,       ldp, \
+				  cntx  \
+				); \
+			} \
+\
+			/* NOTE: This value is equivalent to ps_p. */ \
+			p_inc = ps_p; \
+		} \
+\
+		p_begin += p_inc; \
+\
+/*
+if ( row_stored ) \
+PASTEMAC(ch,fprintm)( stdout, "packm_sup_var1: b packed", panel_len_max, panel_dim_max, \
+                      p_use,         rs_p, cs_p, "%5.2f", "" ); \
+if ( !row_stored ) \
+PASTEMAC(ch,fprintm)( stdout, "packm_sup_var1: a packed", panel_dim_max, panel_len_max, \
+                      p_use,         rs_p, cs_p, "%5.2f", "" ); \
+*/ \
+	} \
+\
+}
+
+INSERT_GENTFUNCR_BASIC( packm, packtrim_sup_var1 )
+
 

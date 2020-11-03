@@ -33,69 +33,85 @@
 
 */
 
-//
-// Prototype BLAS-like interfaces to the variants.
-//
-
 #undef  GENTPROT
-#define GENTPROT( ctype, ch, varname ) \
+#define GENTPROT( ctype, ch, opname ) \
 \
-void PASTEMAC(ch,varname) \
+void PASTEMAC(ch,opname) \
      ( \
-       trans_t          transc, \
-       pack_t           schema, \
+       bool             will_pack, \
+       packbuf_t        pack_buf_type, \
        dim_t            m, \
-       dim_t            n, \
-       dim_t            m_max, \
-       dim_t            n_max, \
-       ctype*  restrict kappa, \
-       ctype*  restrict c, inc_t rs_c, inc_t cs_c, \
-       ctype*  restrict p, inc_t rs_p, inc_t cs_p, \
-                           dim_t pd_p, inc_t ps_p, \
+       dim_t            k, \
+       dim_t            mr, \
        cntx_t* restrict cntx, \
+       rntm_t* restrict rntm, \
+       mem_t*  restrict mem, \
        thrinfo_t* restrict thread  \
-     );
+     ); \
 
-INSERT_GENTPROT_BASIC0( packm_sup_var1 )
+INSERT_GENTPROT_BASIC0( packtrim_sup_init_mem_a )
+
 
 #undef  GENTPROT
-#define GENTPROT( ctype, ch, varname ) \
+#define GENTPROT( ctype, ch, opname ) \
 \
-void PASTEMAC(ch,varname) \
+void PASTEMAC(ch,opname) \
      ( \
-       trans_t          transc, \
-       pack_t           schema, \
+       bool             did_pack, \
+       rntm_t* restrict rntm, \
+       mem_t*  restrict mem, \
+       thrinfo_t* restrict thread  \
+     ); \
+
+INSERT_GENTPROT_BASIC0( packtrim_sup_finalize_mem_a )
+
+
+#undef  GENTPROT
+#define GENTPROT( ctype, ch, opname ) \
+\
+void PASTEMAC(ch,opname) \
+     ( \
+       bool             will_pack, \
        dim_t            m, \
-       dim_t            n, \
-       ctype*  restrict kappa, \
-       ctype*  restrict c, inc_t rs_c, inc_t cs_c, \
-       ctype*  restrict p, inc_t rs_p, inc_t cs_p, \
+       dim_t            k, \
+       dim_t            mr, \
+       dim_t*  restrict m_max, \
+       dim_t*  restrict k_max, \
+       ctype*           a, inc_t           rs_a, inc_t           cs_a, \
+       ctype**          p, inc_t* restrict rs_p, inc_t* restrict cs_p, \
+                           dim_t* restrict pd_p, inc_t* restrict ps_p, \
        cntx_t* restrict cntx, \
+       mem_t*  restrict mem, \
        thrinfo_t* restrict thread  \
-     );
+     ); \
 
-INSERT_GENTPROT_BASIC0( packm_sup_var2 )
+INSERT_GENTPROT_BASIC0( packtrim_sup_init_a )
+
 
 #undef  GENTPROT
-#define GENTPROT( ctype, ch, varname ) \
+#define GENTPROT( ctype, ch, opname ) \
 \
-void PASTEMAC(ch,varname) \
+void PASTEMAC(ch,opname) \
      ( \
+       bool             will_pack, \
+       packbuf_t        pack_buf_type, \
        doff_t           diagoffa, \
        uplo_t           uploa, \
        trans_t          transa, \
-       pack_t           schema, \
+       dim_t            m_alloc, \
+       dim_t            k_alloc, \
        dim_t            m, \
-       dim_t            n, \
-       dim_t            m_max, \
-       dim_t            n_max, \
+       dim_t            k, \
+       dim_t            mr, \
        ctype*  restrict kappa, \
-       ctype*  restrict c, inc_t rs_c, inc_t cs_c, \
-       ctype*  restrict p, inc_t rs_p, inc_t cs_p, \
-                           dim_t pd_p, inc_t ps_p, \
+       ctype*  restrict a, inc_t           rs_a, inc_t           cs_a, \
+       ctype** restrict p, inc_t* restrict rs_p, inc_t* restrict cs_p, \
+                                                 inc_t* restrict ps_p, \
        cntx_t* restrict cntx, \
+       rntm_t* restrict rntm, \
+       mem_t*  restrict mem, \
        thrinfo_t* restrict thread  \
-     );
+     ); \
 
-INSERT_GENTPROT_BASIC0( packtrim_sup_var1 )
+INSERT_GENTPROT_BASIC0( packtrim_sup_a )
 

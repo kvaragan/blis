@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -126,6 +126,8 @@
 
 // -- Level-3 small/unpacked micro-kernel prototype definitions ----------------
 
+// gemmsup kernels
+
 // NOTE: This results in redundant prototypes for gemmsup_r and gemmsup_c
 // kernels, but since they will be identical the compiler won't complain.
 
@@ -140,6 +142,13 @@
 
 #undef  gemmsup_gx_ukr_name
 #define gemmsup_gx_ukr_name   GENARNAME(gemmsup_g)
+
+// gemmtrsmsup kernels
+
+#undef  gemmtrsmsup_l_ukr_name
+#define gemmtrsmsup_l_ukr_name GENARNAME(gemmtrsmsup_l)
+#undef  gemmtrsmsup_u_ukr_name
+#define gemmtrsmsup_u_ukr_name GENARNAME(gemmtrsmsup_u)
 
 // Include the small/unpacked kernel API template.
 #include "bli_l3_sup_ker.h"
@@ -326,6 +335,7 @@
 	                       PASTEMAC(c,opname), PASTEMAC(z,opname) ); \
 }
 
+#if 0
 #define gen_sup_func_init( func0_p, func1_p, opname ) \
 { \
 	bli_func_init( func0_p, PASTEMAC(s,opname), PASTEMAC(d,opname), \
@@ -333,6 +343,7 @@
 	bli_func_init( func1_p, PASTEMAC(s,opname), PASTEMAC(d,opname), \
 	                        PASTEMAC(c,opname), PASTEMAC(z,opname) ); \
 }
+#endif
 
 
 
@@ -462,15 +473,19 @@ void GENBARNAME(cntx_init)
 	// The level-3 sup handlers are oapi-based, so we only set one slot per
 	// operation.
 
-	// Set the gemm slot to the default gemm sup handler.
+	// Set the gemm and trsm slots to their respective default sup handlers.
 	vfuncs[ BLIS_GEMM ] = bli_gemmsup_ref;
+	vfuncs[ BLIS_TRSM ] = bli_trsmsup_ref;
 
 
 	// -- Set level-3 small/unpacked micro-kernels and preferences -------------
 
-	funcs  = bli_cntx_l3_sup_kers_buf( cntx );
-	mbools = bli_cntx_l3_sup_kers_prefs_buf( cntx );
+	funcs  = bli_cntx_l3_gemmsup_kers_buf( cntx );
+	mbools = bli_cntx_l3_gemmsup_kers_prefs_buf( cntx );
 
+	// Register a gemmsup kernel for each of the eight stor3_t id enumerated
+	// values. Note: All values are mapped to the row-traversing reference
+	// kernel.
 #if 0
 	// Adhere to the small/unpacked ukernel mappings:
 	// - rv -> rrr, rcr
@@ -513,6 +528,18 @@ void GENBARNAME(cntx_init)
 	bli_mbool_init( &mbools[ BLIS_CCC ],  TRUE,  TRUE,  TRUE,  TRUE );
 
 	bli_mbool_init( &mbools[ BLIS_XXX ],  TRUE,  TRUE,  TRUE,  TRUE );
+
+
+	funcs = bli_cntx_l3_gemmtrsmsup_kers_buf( cntx );
+
+	// Register lower and upper gemmtrsmsup kernels.
+	gen_func_init( &funcs[ BLIS_GEMMTRSM_L_UKR ], gemmtrsmsup_l_ukr_name );
+	gen_func_init( &funcs[ BLIS_GEMMTRSM_U_UKR ], gemmtrsmsup_u_ukr_name );
+
+	// Set unused gemmtrsmsup fields to NULL.
+	bli_func_init_null( &funcs[ BLIS_GEMM_UKR ] );
+	bli_func_init_null( &funcs[ BLIS_TRSM_L_UKR ] );
+	bli_func_init_null( &funcs[ BLIS_TRSM_U_UKR ] );
 
 
 	// -- Set level-1f kernels -------------------------------------------------

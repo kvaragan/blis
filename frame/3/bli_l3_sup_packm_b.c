@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -57,7 +57,7 @@ void PASTEMAC(ch,opname) \
 	} \
 	else /* if ( will_pack == TRUE ) */ \
 	{ \
-		/* NOTE: This is "rounding up" of the last upanel is actually optional
+		/* NOTE: This "rounding up" of the last upanel is actually optional
 		   for the rrc/crc cases, but absolutely necessary for the other cases
 		   since we NEED that last micropanel to have the same ldim (cs_p) as
 		   the other micropanels. Why? So that millikernels can use the same
@@ -255,7 +255,7 @@ void PASTEMAC(ch,opname) \
 	} \
 	else /* if ( will_pack == TRUE ) */ \
 	{ \
-		/* NOTE: This is "rounding up" of the last upanel is actually optional
+		/* NOTE: This "rounding up" of the last upanel is actually optional
 		   for the rrc/crc cases, but absolutely necessary for the other cases
 		   since we NEED that last micropanel to have the same ldim (cs_p) as
 		   the other micropanels. Why? So that millikernels can use the same
@@ -280,15 +280,15 @@ void PASTEMAC(ch,opname) \
 		} \
 		else \
 		{ \
-			/* All other stor3_t ids: pack A to column-stored row-panels. */ \
+			/* All other stor3_t ids: pack B to column-stored row-panels. */ \
 			*rs_p = nr; \
 			*cs_p = 1; \
 \
 			*pd_p = nr; \
 			*ps_p = k * nr; \
 \
-			/* Set the schema to "packed row panels" to indicate packing to
-			   conventional column-stored row panels. */ \
+			/* Set the schema to "packed column panels" to indicate packing to
+			   conventional row-stored column panels. */ \
 			*schema = BLIS_PACKED_COL_PANELS; \
 		} \
 \
@@ -303,7 +303,7 @@ INSERT_GENTFUNC_BASIC0( packm_sup_init_b )
 
 
 //
-// Define BLAS-like interfaces to the variant chooser.
+// Define BLAS-like interfaces to the front-facing packing function.
 //
 
 #undef  GENTFUNC
@@ -312,9 +312,10 @@ INSERT_GENTFUNC_BASIC0( packm_sup_init_b )
 void PASTEMAC(ch,opname) \
      ( \
        bool             will_pack, \
+       bool             will_fuse, \
        packbuf_t        pack_buf_type, \
        stor3_t          stor_id, \
-       trans_t          transc, \
+       trans_t          transb, \
        dim_t            k_alloc, \
        dim_t            n_alloc, \
        dim_t            k, \
@@ -375,7 +376,7 @@ void PASTEMAC(ch,opname) \
 		printf( "blis_ packm_sup_b: not packing B.\n" ); \
 		*/ \
 	} \
-	else /* if ( will_pack == TRUE ) */ \
+	else if ( will_pack == TRUE && will_fuse == FALSE ) \
 	{ \
 		if ( schema == BLIS_PACKED_COLUMNS ) \
 		{ \
@@ -386,7 +387,7 @@ void PASTEMAC(ch,opname) \
 			/* For plain packing by columns, use var2. */ \
 			PASTEMAC(ch,packm_sup_var2) \
 			( \
-			  transc, \
+			  transb, \
 			  schema, \
 			  k, \
 			  n, \
@@ -406,7 +407,7 @@ void PASTEMAC(ch,opname) \
 			/* For packing to row-stored column panels, use var1. */ \
 			PASTEMAC(ch,packm_sup_var1) \
 			( \
-			  transc, \
+			  transb, \
 			  schema, \
 			  k, \
 			  n, \

@@ -312,7 +312,7 @@
 -1 -1    #   dimensions: m n
 ????n    #   parameters: side uploa transa diaga transb
 
-1        # trsm
+2        # trsm
 -1 -1    #   dimensions: m n
-????     #   parameters: side uploa transa diaga
+llnn     #   parameters: side uploa transa diaga
 

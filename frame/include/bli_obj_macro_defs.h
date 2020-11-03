@@ -6,7 +6,7 @@
 
    Copyright (C) 2014, The University of Texas at Austin
    Copyright (C) 2016, Hewlett Packard Enterprise Development LP
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -267,6 +267,12 @@ BLIS_INLINE uplo_t bli_obj_uplo( obj_t* obj )
 {
 	return ( uplo_t )
 	       ( obj->info & BLIS_UPLO_BITS );
+}
+
+BLIS_INLINE uplo_t bli_obj_uplo_toggled( obj_t* obj )
+{
+	return ( uplo_t )
+	       ( ( ( obj->info & BLIS_UPLO_BITS ) ^ BLIS_LOWER_BIT ) ^ BLIS_UPPER_BIT );
 }
 
 BLIS_INLINE bool bli_obj_is_upper( obj_t* obj )

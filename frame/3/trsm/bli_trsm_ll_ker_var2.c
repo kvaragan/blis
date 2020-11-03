@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -112,7 +112,10 @@ void bli_trsm_ll_ker_var2
 	// subproblems that correspond to micro-panels that do not intersect
 	// the diagonal. We need this separate scalar because it's possible
 	// that the alpha attached to B was reset, if it was applied during
-	// packing.
+	// packing. (NOTE: Currently, the only reason alpha would be applied
+	// during packing is when using 1m and alpha has a non-zero imaginary
+	// component, and therefore must be applied during packing. In all
+	// other situations, alpha1 and alpha2 should contain the same value.)
 	buf_alpha2 = bli_obj_internal_scalar_buffer( c );
 
 	// Index into the type combination array to extract the correct

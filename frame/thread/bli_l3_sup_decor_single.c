@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -43,8 +43,6 @@ err_t bli_l3_sup_thread_decorator
      (
        l3supint_t func,
        opid_t     family,
-       //pack_t     schema_a,
-       //pack_t     schema_b,
        obj_t*     alpha,
        obj_t*     a,
        obj_t*     b,

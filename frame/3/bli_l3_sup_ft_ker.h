@@ -4,7 +4,7 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -64,5 +64,28 @@ typedef void (*PASTECH3(ch,opname,_ker,tsuf)) \
 INSERT_GENTDEF( gemmsup )
 
 
-#endif
+// gemmtrsmsup
 
+#undef  GENTDEF
+#define GENTDEF( ctype, ch, opname, tsuf ) \
+\
+typedef void (*PASTECH3(ch,opname,_ker,tsuf)) \
+     ( \
+       dim_t               m, \
+       dim_t               n, \
+       dim_t               k1x, \
+       doff_t              k, \
+       ctype*     restrict alpha, \
+       ctype*     restrict a1x, \
+       ctype*     restrict a11, inc_t rs_a, inc_t cs_a, \
+       ctype*     restrict d11, \
+       ctype*     restrict bx1, \
+       ctype*     restrict b11, inc_t rs_b, inc_t cs_b, \
+       ctype*     restrict c11, inc_t rs_c, inc_t cs_c, \
+       auxinfo_t* restrict data, \
+       cntx_t*    restrict cntx  \
+     );
+
+INSERT_GENTDEF( gemmtrsmsup )
+
+#endif

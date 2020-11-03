@@ -4,7 +4,7 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
+   Copyright (C) 2014 - 2020, The University of Texas at Austin
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -32,27 +32,33 @@
 
 */
 
-err_t bli_gemmsup_int
-     (
-       obj_t*  alpha,
-       obj_t*  a,
-       obj_t*  b,
-       obj_t*  beta,
-       obj_t*  c,
-       cntx_t* cntx,
-       rntm_t* rntm,
-       thrinfo_t* thread
-     );
+#ifndef BLIS_INVERT2S_H
+#define BLIS_INVERT2S_H
 
-err_t bli_trsmsup_int
-     (
-       obj_t*  alpha,
-       obj_t*  a,
-       obj_t*  b,
-       obj_t*  beta,
-       obj_t*  c,
-       cntx_t* cntx,
-       rntm_t* rntm,
-       thrinfo_t* thread
-     );
+// inverts
+
+// Notes:
+// - The first char encodes the type of x.
+
+#define bli_sinvert2s( x, y ) \
+{ \
+	(y) = 1.0F / (x); \
+}
+#define bli_dinvert2s( x, y ) \
+{ \
+	(y) = 1.0  / (x); \
+}
+
+#define bli_cinvert2s( x, y ) \
+{ \
+	bli_ccopyris( bli_creal(x), bli_cimag(x), bli_creal(y), bli_cimag(y) ); \
+	bli_cinvertris( bli_creal(y), bli_cimag(y) ); \
+}
+#define bli_zinvert2s( x, y ) \
+{ \
+	bli_zcopyris( bli_zreal(x), bli_zimag(x), bli_zreal(y), bli_zimag(y) ); \
+	bli_zinvertris( bli_zreal(y), bli_zimag(y) ); \
+}
+
+#endif
 

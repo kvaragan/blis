@@ -4,7 +4,7 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -89,7 +89,7 @@ err_t bli_gemmsup_int
 	const bool    is_rcc_crc_ccr_ccc = !is_rrr_rrc_rcr_crr;
 
 	const num_t   dt         = bli_obj_dt( c );
-	const bool    row_pref   = bli_cntx_l3_sup_ker_prefers_rows_dt( dt, stor_id, cntx );
+	const bool    row_pref   = bli_cntx_l3_gemmsup_ker_prefers_rows_dt( dt, stor_id, cntx );
 
 	const bool    is_primary = ( row_pref ? is_rrr_rrc_rcr_crr
 	                                      : is_rcc_crc_ccr_ccc );
@@ -150,7 +150,7 @@ err_t bli_gemmsup_int
 		{
 			#ifdef TRACEVAR
 			if ( bli_thread_am_ochief( thread ) )
-			printf( "bli_l3_sup_int(): var2m primary\n" );
+			printf( "bli_gemmsup_int(): var2m primary\n" );
 			#endif
 			// block-panel macrokernel; m -> mc, mr; n -> nc, nr: var2()
 			bli_gemmsup_ref_var2m( BLIS_NO_TRANSPOSE,
@@ -161,7 +161,7 @@ err_t bli_gemmsup_int
 		{
 			#ifdef TRACEVAR
 			if ( bli_thread_am_ochief( thread ) )
-			printf( "bli_l3_sup_int(): var1n primary\n" );
+			printf( "bli_gemmsup_int(): var1n primary\n" );
 			#endif
 			// panel-block macrokernel; m -> nc*,mr; n -> mc*,nr: var1()
 			bli_gemmsup_ref_var1n( BLIS_NO_TRANSPOSE,
@@ -215,7 +215,7 @@ err_t bli_gemmsup_int
 		{
 			#ifdef TRACEVAR
 			if ( bli_thread_am_ochief( thread ) )
-			printf( "bli_l3_sup_int(): var2m non-primary\n" );
+			printf( "bli_gemmsup_int(): var2m non-primary\n" );
 			#endif
 			// panel-block macrokernel; m -> nc, nr; n -> mc, mr: var2() + trans
 			bli_gemmsup_ref_var2m( BLIS_TRANSPOSE,
@@ -226,13 +226,113 @@ err_t bli_gemmsup_int
 		{
 			#ifdef TRACEVAR
 			if ( bli_thread_am_ochief( thread ) )
-			printf( "bli_l3_sup_int(): var1n non-primary\n" );
+			printf( "bli_gemmsup_int(): var1n non-primary\n" );
 			#endif
 			// block-panel macrokernel; m -> mc*,nr; n -> nc*,mr: var1() + trans
 			bli_gemmsup_ref_var1n( BLIS_TRANSPOSE,
 			                       alpha, a, b, beta, c,
 			                       stor_id, cntx, rntm, thread );
 			// *requires nudging of mc up to be a multiple of nr.
+		}
+	}
+
+	// Return success so that the caller knows that we computed the solution.
+	return BLIS_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+
+err_t bli_trsmsup_int
+     (
+       obj_t*  alpha,
+       obj_t*  a,
+       obj_t*  b,
+       obj_t*  beta,
+       obj_t*  c,
+       cntx_t* cntx,
+       rntm_t* rntm,
+       thrinfo_t* thread
+     )
+{
+	const stor3_t stor_id = bli_obj_stor3_from_strides( c, a, b );
+
+	// Don't use the small/unpacked implementation if one of the matrices
+	// uses general stride.
+	if ( stor_id == BLIS_XXX ) return BLIS_FAILURE;
+
+#if 0
+	// Reconstruct the side parameter by checking which matrix is triangular.
+	const side_t side = ( bli_obj_is_triangular( a ) ? BLIS_LEFT
+	                                                 : BLIS_RIGHT );
+
+	// Use the side to decide whether we'll need to transpose the operation.
+	const trans_t trans = ( bli_is_left( side ) ? BLIS_NO_TRANSPOSE
+	                                            : BLIS_TRANSPOSE );
+#endif
+
+	// Deduce the side parameter and use it to decide whether to transpose the
+	// operation.
+	if ( bli_obj_is_triangular( a ) )
+	{
+		// This implies side == BLIS_LEFT, and so we skip the transposition.
+
+		if ( bli_obj_is_lower( a ) )
+		{
+			#ifdef TRACEVAR
+			if ( bli_thread_am_ochief( thread ) )
+			printf( "bli_l3_trsmsup_int(): trsm_ll_var2 (no trans) called\n" );
+			#endif
+
+			// Call the variant.
+			bli_trsmsup_ll_ref_var2( BLIS_NO_TRANSPOSE,
+			                         alpha, a, b,
+			                         cntx, rntm, thread );
+		}
+		else // if ( bli_obj_is_upper( a ) )
+		{
+			#ifdef TRACEVAR
+			if ( bli_thread_am_ochief( thread ) )
+			printf( "bli_l3_trsmsup_int(): trsm_lu_var2 (no trans) called\n" );
+			printf( "bli_l3_trsmsup_int(): not yet implemented\n" );
+			#endif
+
+			#if 0
+			// Call the variant.
+			bli_trsmsup_lu_ref_var2( BLIS_NO_TRANSPOSE,
+			                         alpha, a, b,
+			                         cntx, rntm, thread );
+			#endif
+		}
+	}
+	else // if ( bli_obj_is_triangular( b ) )
+	{
+		// This implies side == BLIS_RIGHT, and so we transpose the operation.
+
+		if ( bli_obj_is_lower( b ) )
+		{
+			#ifdef TRACEVAR
+			if ( bli_thread_am_ochief( thread ) )
+			printf( "bli_l3_trsmsup_int(): trsm_lu_var2 (trans) called\n" );
+			printf( "bli_l3_trsmsup_int(): not yet implemented\n" );
+			#endif
+
+			#if 0
+			// Call the variant.
+			// NOTE: Transposing the operation will result in the triangular matrix
+			// becoming upper-stored, hence transforming trsm_rl into trsm_lu.
+			bli_trsmsup_lu_ref_var2( BLIS_TRANSPOSE,
+			                         alpha, b, a,
+			                         cntx, rntm, thread );
+			#endif
+		}
+		else // if ( bli_obj_is_upper( b ) )
+		{
+			// Call the variant.
+			// NOTE: Transposing the operation will result in the triangular matrix
+			// becoming lower-stored, hence transforming trsm_ru into trsm_ll.
+			bli_trsmsup_ll_ref_var2( BLIS_TRANSPOSE,
+			                         alpha, b, a,
+			                         cntx, rntm, thread );
 		}
 	}
 

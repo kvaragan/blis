@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -42,6 +42,7 @@
 
 void bli_thrinfo_sup_grow
      (
+       opid_t     op,
        rntm_t*    rntm,
        bszid_t*   bszid_par,
        thrinfo_t* thread
@@ -56,6 +57,22 @@ thrinfo_t* bli_thrinfo_sup_rgrow
      );
 
 thrinfo_t* bli_thrinfo_sup_create_for_cntl
+     (
+       rntm_t*    rntm,
+       bszid_t*   bszid_par,
+       bszid_t*   bszid_chl,
+       thrinfo_t* thread_par
+     );
+
+thrinfo_t* bli_thrinfo_sup_rgrow_prenode
+     (
+       rntm_t*    rntm,
+       bszid_t*   bszid_par,
+       bszid_t*   bszid_cur,
+       thrinfo_t* thread_par
+     );
+
+thrinfo_t* bli_thrinfo_sup_create_for_cntl_prenode
      (
        rntm_t*    rntm,
        bszid_t*   bszid_par,

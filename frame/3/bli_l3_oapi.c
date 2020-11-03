@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -68,7 +68,7 @@ void PASTEMAC(opname,EX_SUF) \
 		/* Execute the small/unpacked oapi handler. If it finds that the problem
 		   does not fall within the thresholds that define "small", or for some
 		   other reason decides not to use the small/unpacked implementation,
-		   the function returns with BLIS_FAILURE, which causes execution to
+		   the function will return with BLIS_FAILURE, which causes execution to
 		   proceed towards the conventional implementation. */ \
 		err_t result = PASTEMAC(opname,sup)( alpha, a, b, beta, c, cntx, rntm ); \
 		if ( result == BLIS_SUCCESS ) return; \
@@ -267,8 +267,60 @@ void PASTEMAC(opname,EX_SUF) \
 }
 
 GENFRONT( trmm )
+
+
+#undef  GENFRONT
+#define GENFRONT( opname ) \
+\
+void PASTEMAC(opname,EX_SUF) \
+     ( \
+       side_t  side, \
+       obj_t*  alpha, \
+       obj_t*  a, \
+       obj_t*  b  \
+       BLIS_OAPI_EX_PARAMS  \
+     ) \
+{ \
+	bli_init_once(); \
+\
+	BLIS_OAPI_EX_DECLS \
+\
+	/* If the rntm is non-NULL, it may indicate that we should forgo sup
+	   handling altogether. */ \
+	bool enable_sup = TRUE; \
+	if ( rntm != NULL ) enable_sup = bli_rntm_l3_sup( rntm ); \
+\
+	if ( enable_sup ) \
+	{ \
+		/* Execute the small/unpacked oapi handler. If it finds that the problem
+		   does not fall within the thresholds that define "small", or for some
+		   other reason decides not to use the small/unpacked implementation,
+		   the function will return with BLIS_FAILURE, which causes execution to
+		   proceed towards the conventional implementation. */ \
+		err_t result = PASTEMAC(opname,sup)( side, alpha, a, b, cntx, rntm ); \
+		if ( result == BLIS_SUCCESS ) return; \
+	} \
+\
+	/* Only proceed with an induced method if all operands have the same
+	   (complex) datatype. If any datatypes differ, skip the induced method
+	   chooser function and proceed directly with native execution, which is
+	   where mixed datatype support will be implemented (if at all). */ \
+	if ( bli_obj_dt( a ) == bli_obj_dt( b ) && \
+	     bli_obj_is_complex( b ) ) \
+	{ \
+		/* Invoke the operation's "ind" function--its induced method front-end.
+		   For complex problems, it calls the highest priority induced method
+		   that is available (ie: implemented and enabled), and if none are
+		   enabled, it calls native execution. (For real problems, it calls
+		   the operation's native execution interface.) */ \
+		PASTEMAC(opname,ind)( side, alpha, a, b, cntx, rntm ); \
+	} \
+	else \
+	{ \
+		PASTEMAC(opname,nat)( side, alpha, a, b, cntx, rntm ); \
+	} \
+}
+
 GENFRONT( trsm )
 
-
 #endif
-

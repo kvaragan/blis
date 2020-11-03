@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -104,6 +104,13 @@ void bli_thrinfo_init_single
 	  BLIS_NO_PART,
 	  thread
 	);
+
+	// trsmsup uses a "single" thrinfo_t object instead of dynamically
+	// creating a tree at run-time. But in order for it to work with the
+	// existing ic-loop parallelism optimization, we have to initialize
+	// the sub-prenode the same way we do the sub-node so that the calls
+	// to bli_thrinfo_sub_prenode() return a usable pointer.
+	bli_thrinfo_set_sub_prenode( thread, thread );
 }
 
 void bli_thrinfo_free
@@ -389,6 +396,11 @@ thrinfo_t* bli_thrinfo_rgrow_prenode
 {
 	thrinfo_t* thread_cur;
 
+	// NOTE: The only difference between bli_thrinfo_rgrow() and this function
+	// is that, in the BLIS_NO_PART case below, the former calculates the
+	// number of threads based on the current loop while the latter calculates
+	// the number of threads based on the parent loop.
+
 	// We must handle two cases: those where the next node in the
 	// control tree is a partitioning node, and those where it is
 	// a non-partitioning (ie: packing) node.
@@ -491,7 +503,7 @@ thrinfo_t* bli_thrinfo_create_for_cntl_prenode
 	new_comm = bli_thread_broadcast( thread_par, new_comm );
 
 	// All threads create a new thrinfo_t node using the communicator
-	// that was created by their chief, as identified by parent_work_id.
+	// that was created by their chief, as identified by new_comm.
 	thrinfo_t* thread_chl = bli_thrinfo_create
 	(
 	  rntm,          // rntm

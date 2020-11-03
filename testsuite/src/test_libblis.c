@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -57,6 +57,8 @@ char libblis_test_rd_chars[ 2 + 1 ] = "sd";
 char libblis_test_cd_chars[ 2 + 1 ] = "cz";
 
 char libblis_test_dt_chars[ 4 + 1 ] = "sdcz";
+
+//#define QUIET
 
 
 int main( int argc, char** argv )
@@ -418,8 +420,10 @@ void libblis_test_read_ops_file( char* input_filename, test_ops_t* ops )
 	libblis_test_read_op_info( ops, input_stream, BLIS_TRMM3, BLIS_TEST_DIMS_MN,  5, &(ops->trmm3) );
 	libblis_test_read_op_info( ops, input_stream, BLIS_TRSM,  BLIS_TEST_DIMS_MN,  4, &(ops->trsm) );
 
+#ifndef QUIET
 	// Output the section overrides.
 	libblis_test_output_section_overrides( stdout, ops );
+#endif
 
 	// Close the file.
 	fclose( input_stream );
@@ -634,8 +638,10 @@ void libblis_test_read_params_file( char* input_filename, test_params_t* params 
 	// Close the file.
 	fclose( input_stream );
 
+#ifndef QUIET
 	// Output the parameter struct.
 	libblis_test_output_params_struct( stdout, params );
+#endif
 }
 
 
@@ -2086,10 +2092,12 @@ void libblis_test_op_driver
 	// These statements should only be executed by one thread.
 	if ( tdata->id == 0 )
 	{
+#ifndef QUIET
 		// Output a heading and the contents of the op struct.
 		libblis_test_fprintf_c( stdout, "--- %s ---\n", op_str );
 		libblis_test_fprintf_c( stdout, "\n" );
 		libblis_test_output_op_struct( stdout, op, op_str );
+#endif
 
 		// Also output to a matlab file if requested (and successfully opened).
 		if ( output_stream )
@@ -2113,6 +2121,8 @@ void libblis_test_op_driver
 	//for ( sci = 0; sci < 5; ( sci == 2 ? sci+=2 : ++sci ) )
 	//for ( sci = 3; sci < 8; ( sci == 3 ? sci+=2 : ++sci ) )
 	//for ( sci = 0; sci < 1; ++sci )
+	//for ( sci = 0; sci < 3; ( sci == 0 ? sci+=2 : ++sci ) )
+	//for ( sci = 2; sci < 3; ++sci )
 	//for ( sci = 7; sci < 8; ++sci )
 	{
 		// Loop over the requested datatypes.
@@ -3124,7 +3134,9 @@ void libblis_test_parse_command_line( int argc, char** argv )
 
 	if ( gave_option_g == FALSE )
 	{
+#ifndef QUIET
 		libblis_test_printf_infoc( "no -g option given; defaulting to \"%s\" for parameters filename.\n", PARAMETERS_FILENAME );
+#endif
 
 		// Copy default parameters filename into its global string.
 		strncpy( libblis_test_parameters_filename,
@@ -3133,7 +3145,9 @@ void libblis_test_parse_command_line( int argc, char** argv )
 
 	if ( gave_option_o == FALSE )
 	{
+#ifndef QUIET
 		libblis_test_printf_infoc( "no -o option given; defaulting to \"%s\" for operations filename.\n", OPERATIONS_FILENAME );
+#endif
 
 		// Copy default operations filename into its global string.
 		strncpy( libblis_test_operations_filename,

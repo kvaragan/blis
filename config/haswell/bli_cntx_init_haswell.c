@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -187,7 +187,7 @@ void bli_cntx_init_haswell( cntx_t* cntx )
 #endif
 
 	// Update the context with optimized small/unpacked gemm kernels.
-	bli_cntx_set_l3_sup_kers
+	bli_cntx_set_l3_gemmsup_kers
 	(
 	  16,
 	  //BLIS_RCR, BLIS_DOUBLE, bli_dgemmsup_r_haswell_ref,
@@ -210,6 +210,26 @@ void bli_cntx_init_haswell( cntx_t* cntx )
 	  BLIS_CCC, BLIS_FLOAT, bli_sgemmsup_rv_haswell_asm_6x16n, TRUE,
 	  cntx
 	);
+
+	// Update the context with optimized small/unpacked gemmtrsm kernels.
+	bli_cntx_set_l3_gemmtrsmsup_kers
+	(
+	  1, //2
+	  BLIS_GEMMTRSM_L_UKR, BLIS_DOUBLE, bli_dgemmtrsmsup_l_haswell_asm_6x8,
+	  //BLIS_GEMMTRSM_U_UKR, BLIS_DOUBLE, bli_dgemmtrsmsup_u_haswell_asm_6x8,
+	  cntx
+	);
+
+	// Update the context with optimized packm kernels.
+#if 1
+	bli_cntx_set_packm_kers
+	(
+	  2,
+	  BLIS_PACKM_6XK_KER,  BLIS_DOUBLE, bli_dpackm_haswell_asm_6xk,
+	  BLIS_PACKM_8XK_KER,  BLIS_DOUBLE, bli_dpackm_haswell_asm_8xk,
+	  cntx
+	);
+#endif
 
 	// Initialize level-3 sup blocksize objects with architecture-specific
 	// values.

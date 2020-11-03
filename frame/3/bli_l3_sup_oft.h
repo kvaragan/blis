@@ -4,7 +4,7 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -40,7 +40,7 @@
 // -- Level-3 small/unpacked object function types -----------------------------
 //
 
-// gemm
+// gemmsup
 
 #undef  GENTDEF
 #define GENTDEF( opname ) \
@@ -57,6 +57,24 @@ typedef err_t (*PASTECH(opname,_oft)) \
 );
 
 GENTDEF( gemmsup )
+
+
+// trsmsup
+
+#undef  GENTDEF
+#define GENTDEF( opname ) \
+\
+typedef err_t (*PASTECH(opname,_oft)) \
+( \
+  side_t  side, \
+  obj_t*  alpha, \
+  obj_t*  a, \
+  obj_t*  b, \
+  cntx_t* cntx, \
+  rntm_t* rntm  \
+);
+
+GENTDEF( trsmsup )
 
 #endif
 

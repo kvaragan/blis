@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -32,6 +32,13 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+
+// -- level-1m -----------------------------------------------------------------
+
+// packm (asm)
+PACKM_KER_PROT( double,   d, packm_haswell_asm_6xk )
+PACKM_KER_PROT( double,   d, packm_haswell_asm_8xk )
+
 
 // -- level-3 ------------------------------------------------------------------
 
@@ -63,7 +70,7 @@ GEMMTRSM_UKR_PROT( double,   d, gemmtrsm_u_haswell_asm_6x8 )
 //GEMM_UKR_PROT( dcomplex, z, gemm_haswell_asm_4x3 )
 
 
-// -- level-3 sup --------------------------------------------------------------
+// -- gemmsup ------------------------------------------------------------------
 
 // -- single real --
 
@@ -185,7 +192,7 @@ GEMMSUP_KER_PROT( float,    s, gemmsup_rd_haswell_asm_1x16n )
 
 // -- double real --
 
-// gemmsup_r
+// gemmsup_r (reference)
 
 GEMMSUP_KER_PROT( double,   d, gemmsup_r_haswell_ref_6x1 )
 GEMMSUP_KER_PROT( double,   d, gemmsup_r_haswell_ref_5x1 )
@@ -272,4 +279,54 @@ GEMMSUP_KER_PROT( double,   d, gemmsup_rd_haswell_asm_6x8n )
 GEMMSUP_KER_PROT( double,   d, gemmsup_rd_haswell_asm_3x8n )
 GEMMSUP_KER_PROT( double,   d, gemmsup_rd_haswell_asm_2x8n )
 GEMMSUP_KER_PROT( double,   d, gemmsup_rd_haswell_asm_1x8n )
+
+// -- gemmtrsmsup --------------------------------------------------------------
+
+// -- double real --
+
+// gemmtrsmsup_l (reference)
+
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_ref_6x1 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_ref_5x1 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_ref_4x1 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_ref_3x1 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_ref_2x1 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_ref_1x1 )
+
+// gemmtrsmsup_l
+
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_6x8 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_5x8 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_4x8 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_3x8 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_2x8 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_1x8 )
+
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_6x6 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_5x6 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_4x6 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_3x6 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_2x6 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_1x6 )
+
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_6x4 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_5x4 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_4x4 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_3x4 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_2x4 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_1x4 )
+
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_6x2 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_5x2 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_4x2 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_3x2 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_2x2 )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_1x2 )
+
+// gemmtrsmsup_l (mkernel in m dim)
+
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_6x8m )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_6x6m )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_6x4m )
+GEMMTRSMSUP_KER_PROT( double,   d, gemmtrsmsup_l_haswell_asm_6x2m )
 

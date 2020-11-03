@@ -4,7 +4,8 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
+   Copyright (C) 2014, The University of Texas at Austin
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -32,27 +33,48 @@
 
 */
 
-err_t bli_gemmsup_int
-     (
-       obj_t*  alpha,
-       obj_t*  a,
-       obj_t*  b,
-       obj_t*  beta,
-       obj_t*  c,
-       cntx_t* cntx,
-       rntm_t* rntm,
-       thrinfo_t* thread
-     );
+#undef  GENTPROT
+#define GENTPROT( ctype, ch, opname ) \
+\
+void PASTEMAC(ch,opname) \
+     ( \
+       dim_t            n_max, \
+       rntm_t* restrict rntm, \
+       mem_t*  restrict mem, \
+       thrinfo_t* restrict thread  \
+     ); \
 
-err_t bli_trsmsup_int
-     (
-       obj_t*  alpha,
-       obj_t*  a,
-       obj_t*  b,
-       obj_t*  beta,
-       obj_t*  c,
-       cntx_t* cntx,
-       rntm_t* rntm,
-       thrinfo_t* thread
-     );
+INSERT_GENTPROT_BASIC0( packm_sup_init_mem_d )
+
+
+#undef  GENTPROT
+#define GENTPROT( ctype, ch, opname ) \
+\
+void PASTEMAC(ch,opname) \
+     ( \
+       rntm_t* restrict rntm, \
+       mem_t*  restrict mem, \
+       thrinfo_t* restrict thread  \
+     ); \
+
+INSERT_GENTPROT_BASIC0( packm_sup_finalize_mem_d )
+
+
+#undef  GENTPROT
+#define GENTPROT( ctype, ch, opname ) \
+\
+void PASTEMAC(ch,opname) \
+     ( \
+       diag_t           diaga, \
+       dim_t            k_alloc, \
+       dim_t            k, \
+       ctype*  restrict a, inc_t rs_a, inc_t cs_a, \
+       ctype** restrict p, \
+       cntx_t* restrict cntx, \
+       rntm_t* restrict rntm, \
+       mem_t*  restrict mem, \
+       thrinfo_t* restrict thread  \
+     ); \
+
+INSERT_GENTPROT_BASIC0( packm_sup_d )
 

@@ -4,7 +4,7 @@
    An object-based framework for developing high-performance BLAS-like
    libraries.
 
-   Copyright (C) 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2019 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -39,6 +39,16 @@ err_t bli_gemmsup
        obj_t*  b,
        obj_t*  beta,
        obj_t*  c,
+       cntx_t* cntx,
+       rntm_t* rntm
+     );
+
+err_t bli_trsmsup
+     (
+       side_t  side,
+       obj_t*  alpha,
+       obj_t*  a,
+       obj_t*  b,
        cntx_t* cntx,
        rntm_t* rntm
      );

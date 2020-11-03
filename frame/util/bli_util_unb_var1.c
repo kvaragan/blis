@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -921,17 +921,21 @@ void PASTEMAC(ch,opname) \
 \
 	fprintf( file, "%s\n", s1 ); \
 \
-	for ( i = 0; i < m; ++i ) \
+	/* Skip the printing altogether if either m or n is zero. */ \
+	if ( !bli_zero_dim2( m, n ) ) \
 	{ \
-		for ( j = 0; j < n; ++j ) \
+		for ( i = 0; i < m; ++i ) \
 		{ \
-			chi1 = (( ctype* ) x) + i*rs_x + j*cs_x; \
+			for ( j = 0; j < n; ++j ) \
+			{ \
+				chi1 = (( ctype* ) x) + i*rs_x + j*cs_x; \
 \
-			PASTEMAC(ch,fprints)( file, format, *chi1 ); \
-			fprintf( file, " " ); \
+				PASTEMAC(ch,fprints)( file, format, *chi1 ); \
+				fprintf( file, " " ); \
+			} \
+\
+			fprintf( file, "\n" ); \
 		} \
-\
-		fprintf( file, "\n" ); \
 	} \
 \
 	fprintf( file, "%s\n", s2 ); \

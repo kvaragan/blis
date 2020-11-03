@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -59,6 +59,10 @@ err_t bli_l3_sup_thread_decorator
 {
 	// Query the total number of threads from the rntm_t object.
 	const dim_t n_threads = bli_rntm_num_threads( rntm );
+
+	#ifdef PRINT_THRINFO
+	thrinfo_t** threads = bli_malloc_intl( n_threads * sizeof( thrinfo_t* ) );
+	#endif
 
 	// NOTE: The sba was initialized in bli_init().
 
@@ -121,13 +125,23 @@ err_t bli_l3_sup_thread_decorator
 		  thread
 		);
 
+		#ifdef PRINT_THRINFO
+		threads[tid] = thread;
+		#else
 		// Free the current thread's thrinfo_t structure.
 		bli_l3_sup_thrinfo_free( rntm_p, thread );
+		#endif
 	}
 
 	// We shouldn't free the global communicator since it was already freed
 	// by the global communicator's chief thread in bli_l3_thrinfo_free()
 	// (called from the thread entry function).
+
+	#ifdef PRINT_THRINFO
+	if ( family != BLIS_TRSM ) bli_l3_thrinfo_print_gemm_paths( threads );
+	else                       bli_l3_thrinfo_print_trsm_paths( threads );
+	exit(1);
+	#endif
 
 	// Check the array_t back into the small block allocator. Similar to the
 	// check-out, this is done using a lock embedded within the sba to ensure

@@ -5,7 +5,7 @@
    libraries.
 
    Copyright (C) 2014, The University of Texas at Austin
-   Copyright (C) 2018 - 2019, Advanced Micro Devices, Inc.
+   Copyright (C) 2018 - 2020, Advanced Micro Devices, Inc.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -61,10 +61,10 @@ void bli_trsm_front
 	if ( bli_error_checking_is_enabled() )
 		bli_trsm_check( side, alpha, a, b, &BLIS_ZERO, b, cntx );
 
-	// If alpha is zero, scale by beta and return.
+	// If alpha is zero, set B to zero and return.
 	if ( bli_obj_equals( alpha, &BLIS_ZERO ) )
 	{
-		bli_scalm( alpha, b );
+		bli_setm( alpha, b );
 		return;
 	}
 
